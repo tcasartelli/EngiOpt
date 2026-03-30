@@ -272,7 +272,7 @@ if __name__ == "__main__":
             if args.w_reconstruction == 0.0:
                 z = plvae.encode(x_batch)
                 pz = z[:, :perf_dim]
-                p_pred = plvae.predictor(pz)
+                p_pred = plvae.predictor(th.cat([pz, c_batch], dim=-1))
                 loss = th.nn.functional.mse_loss(p_pred, p_batch)
             loss.backward()
 
@@ -326,7 +326,7 @@ if __name__ == "__main__":
                         # Performance predictions
                         pz_train = z[:, :perf_dim]
                         p_pred_scaled = plvae.predictor(
-                            pz_train
+                            th.cat([pz_train, c_train_scaled.to(device)], dim=-1)
                         )
                         p_actual = p_scaler.inverse_transform(
                             p_train_scaled.cpu().numpy()

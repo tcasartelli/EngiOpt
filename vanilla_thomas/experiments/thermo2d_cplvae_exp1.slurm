@@ -28,7 +28,7 @@ source ~/.secrets/ml_env.sh
 export WANDB_MODE=online
 export WANDB_PROJECT="engiopt"
 
-python ~/projects/EngiOpt/thermoelastic2d_constrained_plvae_2d.py \
+python ~/projects/EngiOpt/vanilla_thomas/thermoelastic2d_constrained_plvae_2d.py \
     --problem_id thermoelastic2d \
     --seed 1 \
     --n_epochs 10000 \
