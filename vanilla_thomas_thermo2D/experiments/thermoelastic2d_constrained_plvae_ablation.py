@@ -1,4 +1,4 @@
-"""Constrained Performance-LVAE for thermoelastic2D designs with plummet-based dynamic pruning.
+"ablation" """Constrained Performance-LVAE for thermoelastic2D designs with plummet-based dynamic pruning.
 
 Adapted from constrained_vanilla_plvae_2d.py — uses NMSE threshold constraints
 for both reconstruction and performance prediction.
