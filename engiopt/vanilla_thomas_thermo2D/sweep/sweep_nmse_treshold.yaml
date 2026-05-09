@@ -7,7 +7,7 @@ metric:
 
 parameters:
   nmse_threshold:
-    values: [0.1, 0.25, 0.5]
+    values: [0.20, 0.25, 0.30]
   seed:
     value: 1
   n_epochs:

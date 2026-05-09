@@ -31,8 +31,10 @@ source "$VENV_DIR/bin/activate"
 export no_proxy=$(echo "$no_proxy" | sed 's/api\.wandb\.ai,\?//g; s/,$//')
 export NO_PROXY=$(echo "$NO_PROXY" | sed 's/api\.wandb\.ai,\?//g; s/,$//')
 source ~/.secrets/ml_env.sh
-export WANDB_MODE=online
+export WANDB_MODE=offline
 export WANDB_DIR=/cluster/scratch/tcasartelli/thermoelastic2d_vanilla_constrained_lvae_weight/weight_mixed
+export WANDB_HTTP_TIMEOUT=120
+export WANDB_INIT_TIMEOUT=120
 
 python /cluster/home/tcasartelli/projects/EngiOpt/engiopt/vanilla_thomas_thermo2D/thermoelastic2d_vanilla_constrained_lvae_2d.py \
     --problem_id thermoelastic2d \
@@ -54,3 +56,6 @@ python /cluster/home/tcasartelli/projects/EngiOpt/engiopt/vanilla_thomas_thermo2
     --condition_filter_range 0.1 0.9 \
     --wandb_project thermoelastic2d_vanilla_constrained_lvae_weight \
     --wandb_run_name thermoelastic2d_vanilla_constrained_lvae_weight_mixed
+
+# Sync offline run to W&B after training completes
+wandb sync --include-offline /cluster/scratch/tcasartelli/thermoelastic2d_vanilla_constrained_lvae_weight/weight_mixed/wandb/

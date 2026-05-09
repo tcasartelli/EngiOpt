@@ -39,4 +39,4 @@ export WANDB_INIT_TIMEOUT=120
 cd ~/projects/EngiOpt/engiopt/vanilla_thomas_thermo2D
 
 # Each array task picks up one run from the sweep queue
-wandb agent --count 1 tcasartelli-eth-z-rich/engiopt-vanilla_thomas_thermo2D/ugqnpfcf
+wandb agent --count 1 tcasartelli-eth-z-rich/thermoelastic2d_nmse_threshold_sweep/xtfusq9v

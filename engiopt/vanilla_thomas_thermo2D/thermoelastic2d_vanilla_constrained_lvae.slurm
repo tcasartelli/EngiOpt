@@ -5,15 +5,15 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=8G
 #SBATCH --gpus=rtx_4090:1
-#SBATCH --output=/cluster/scratch/tcasartelli/thermoelastic2d_vanilla_constrained_lvae_v0/logs/thermoelastic2d_vanilla_constrained_lvae_baseline_v0_%j.out
-#SBATCH --error=/cluster/scratch/tcasartelli/thermoelastic2d_vanilla_constrained_lvae_v0/logs/thermoelastic2d_vanilla_constrained_lvae_baseline_v0_%j.err
+#SBATCH --output=/cluster/scratch/tcasartelli/thermoelastic2d_vanilla_constrained_lvae_v1/logs/thermoelastic2d_vanilla_constrained_lvae_baseline_v1_%j.out
+#SBATCH --error=/cluster/scratch/tcasartelli/thermoelastic2d_vanilla_constrained_lvae_v1/logs/thermoelastic2d_vanilla_constrained_lvae_baseline_v1_%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=tcasartelli@ethz.ch
 
 # Create output directories on $SCRATCH
-mkdir -p /cluster/scratch/tcasartelli/thermoelastic2d_vanilla_constrained_lvae_v0/logs
-mkdir -p /cluster/scratch/tcasartelli/thermoelastic2d_vanilla_constrained_lvae_v0/images
-mkdir -p /cluster/scratch/tcasartelli/thermoelastic2d_vanilla_constrained_lvae_v0/checkpoints
+mkdir -p /cluster/scratch/tcasartelli/thermoelastic2d_vanilla_constrained_lvae_v1/logs
+mkdir -p /cluster/scratch/tcasartelli/thermoelastic2d_vanilla_constrained_lvae_v1/images
+mkdir -p /cluster/scratch/tcasartelli/thermoelastic2d_vanilla_constrained_lvae_v1/checkpoints
 
 # Load modules
 module purge

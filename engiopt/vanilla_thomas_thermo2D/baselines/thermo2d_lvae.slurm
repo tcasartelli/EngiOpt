@@ -53,7 +53,7 @@ export WANDB_DIR="/cluster/scratch/tcasartelli/thermoelastic2d_lvae"
 python ~/projects/EngiOpt/engiopt/vanilla_thomas_thermo2D/thermoelastic2d_vanilla_lvae_2d.py \
     --problem_id thermoelastic2d \
     --seed 1 \
-    --n_epochs 10000 \
+    --n_epochs 2 \
     --batch_size 128 \
     --lr 1e-4 \
     --latent_dim 100 \

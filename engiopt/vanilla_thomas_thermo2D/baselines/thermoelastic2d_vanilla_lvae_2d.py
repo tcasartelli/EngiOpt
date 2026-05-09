@@ -54,7 +54,7 @@ class Args:
     """Interval for sampling designs during training."""
 
     # Training parameters
-    n_epochs: int = 100
+    n_epochs: int = 2
     """Number of training epochs."""
     batch_size: int = 128
     """Batch size for training."""
