@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=constrained_vanilla_lvae_2d #questo indica 
-#SBATCH --time=12:00:00
+#SBATCH --time=24:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=8G
@@ -42,9 +42,9 @@ python /cluster/home/tcasartelli/projects/EngiOpt/engiopt/vanilla_thomas_thermo2
     --n_epochs 10000 \
     --batch_size 128 \
     --lr 1e-4 \
-    --latent_dim 100 \
+    --latent_dim 300 \
     --resize_dimensions 100 100 \
-    --nmse_threshold 0.01 \
+    --nmse_threshold 0.25 \
     --pruning_epoch 500 \
     --pruning_threshold 0.05 \
     --pruning_strategy plummet \
@@ -52,5 +52,5 @@ python /cluster/home/tcasartelli/projects/EngiOpt/engiopt/vanilla_thomas_thermo2
     --checkpoint_dir /cluster/scratch/tcasartelli/constrained_vanilla_lvae_2d/checkpoints \
     --save_model \
     --track \
-    --wandb_project thermoelastic2d_nmse_threshold_sweep \
-    --wandb_run_name nmse_0.01_constrained_vanilla_lvae_2d
+    --wandb_project thermoelastic2d_dfull_dataset_augmentation \
+    --wandb_run_name no_aug_latent300_nmse_0.25_constrained_vanilla_lvae_2d

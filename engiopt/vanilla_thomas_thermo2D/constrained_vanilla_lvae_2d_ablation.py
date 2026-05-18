@@ -1,9 +1,8 @@
-"""Constrained LVAE for 2D designs with selectable constraint modes.
+"""Constrained LVAE for 2D designs — data ablation variant.
 
-Provides three strategies for balancing reconstruction and volume compression:
-- one_sided: Mutually exclusive (rec OR vol, never both)
-- gated: Additive with gating (rec always, vol only when below threshold)
-- gradient_balanced: Auto-scaled vol to match rec gradient magnitude
+Same as constrained_vanilla_lvae_2d.py but adds --train_fraction to subsample
+the training set (e.g. 0.25, 0.50, 0.75) for data ablation experiments.
+Subsampling happens BEFORE augmentation so fractions refer to real data.
 
 For more information on LVAE, see: https://arxiv.org/abs/2404.17773
 """
@@ -74,7 +73,7 @@ class Args:
     """Dimensionality of the latent space (overestimate)."""
 
     # Constraint parameters (uses Normalized MSE = MSE / Var(data) for problem-independence)
-    nmse_threshold: float = 0.3 #tanto fa stato quello nello slurm
+    nmse_threshold: float = 0.25
     """NMSE ceiling. Training aims to stay at or below this threshold."""
 
     # Pruning parameters
@@ -103,18 +102,16 @@ class Args:
     condition_filter_tolerance: float = 0.01
     """Tolerance for exact-value matching."""
 
-    # Monitor set (out-of-sample nmse gate)
-    val_gate: bool = False
-    """Use monitor set nmse to gate vol_loss instead of train batch nmse."""
-    monitor_fraction: float = 0.1
-    """Fraction of train data held out as monitor set (no backprop). Used only when val_gate=True."""
-
     # Augmentation
     augment: bool = False
     """Apply 8× dihedral augmentation (rotations + flips) to training data only."""
 
+    # Data ablation
+    train_fraction: float = 1.0
+    """Fraction of training data to use (0 < f ≤ 1). Subsampled before augmentation."""
 
-if __name__ == "__main__": 
+
+if __name__ == "__main__":
     args = tyro.cli(Args)
 
     problem = BUILTIN_PROBLEMS[args.problem_id]()
@@ -153,7 +150,7 @@ if __name__ == "__main__":
         device = th.device("cpu")
 
     # Build encoder and decoder
-    enc = Encoder2D(args.latent_dim, design_shape, args.resize_dimensions) #design sh
+    enc = Encoder2D(args.latent_dim, design_shape, args.resize_dimensions)
     dec = TrueSNDecoder2D(args.latent_dim, design_shape, lipschitz_scale=args.decoder_lipschitz_scale)
 
     # Initialize constrained LVAE
@@ -167,7 +164,6 @@ if __name__ == "__main__":
         pruning_threshold=args.pruning_threshold,
         pruning_strategy=args.pruning_strategy,
         alpha=args.alpha,
-        val_gate=args.val_gate, # use monitor set nmse for gating instead of train batch nmse
     ).to(device)
 
     # ---- DataLoader ----
@@ -190,29 +186,26 @@ if __name__ == "__main__":
             tolerance=args.condition_filter_tolerance,
         )
 
-    x_train_full = th.tensor(np.array(raw_train["optimal_design"])).float().unsqueeze(1)
+    x_train = th.tensor(np.array(raw_train["optimal_design"])).float().unsqueeze(1)
     x_val = th.tensor(np.array(raw_val["optimal_design"])).float().unsqueeze(1)
 
-    if args.augment:
-        x_train_full = augment_designs(x_train_full)  # 8× train only, val stays unaugmented
+    # Data ablation: subsample BEFORE augmentation so the fraction refers to real samples
+    if args.train_fraction < 1.0:
+        n_total = len(x_train)
+        n_keep = max(1, int(n_total * args.train_fraction))
+        idx = rng.choice(n_total, n_keep, replace=False)
+        x_train = x_train[idx]
+        print(f"  Data ablation: keeping {n_keep}/{n_total} train samples ({args.train_fraction:.0%})")
 
-    # Split train into train_actual + monitor (monitor used to gate vol_loss when val_gate=True)
-    if args.val_gate: # if it is true-- use monitor set nmse for gating instead of trainig batch 
-        n_monitor = max(1, int(len(x_train_full) * args.monitor_fraction))
-        x_train = x_train_full[:-n_monitor] 
-        x_monitor = x_train_full[-n_monitor:]
-        monitor_loader = DataLoader(TensorDataset(x_monitor), batch_size=args.batch_size, shuffle=False)
-        print(f"Monitor set: {n_monitor} samples ({args.monitor_fraction:.0%} of train)")
-    else:
-        x_train = x_train_full
-        monitor_loader = None
+    if args.augment:
+        x_train = augment_designs(x_train)  # 8× train only, val stays unaugmented
 
     # Set data variance for NMSE computation (problem-independent threshold)
     lvae.set_data_variance(x_train)
-    # you will see this printing in the output file in the logs on scratch 
     print(f"\n{'=' * 60}")
-    print("Constrained LVAE Training")
+    print("Constrained LVAE Training — Data Ablation")
     print(f"Problem: {args.problem_id}")
+    print(f"Train fraction: {args.train_fraction:.0%}  ({len(x_train)} samples after aug)")
     print(f"Latent dim: {args.latent_dim}")
     print(f"Decoder: TrueSNDecoder2D (lipschitz_scale={args.decoder_lipschitz_scale})")
     print(f"NMSE threshold: {args.nmse_threshold} (R² = {1 - args.nmse_threshold:.2%})")
@@ -357,24 +350,6 @@ if __name__ == "__main__":
                             "norm_plot": wandb.Image(norm_path),
                         }
                     )
-
-        # Evaluate monitor set and update val_gate BEFORE epoch_report so pruning respects it
-        if monitor_loader is not None:
-            with th.no_grad():
-                lvae.eval()
-                mon_nmse = 0.0
-                n_mon = 0
-                for batch_m in monitor_loader:
-                    x_m = batch_m[0].to(device)
-                    _ = lvae.loss(x_m)
-                    bsz = x_m.size(0)
-                    mon_nmse += lvae.nmse * bsz
-                    n_mon += bsz
-                mon_nmse /= n_mon
-                lvae.set_val_nmse(mon_nmse)
-                lvae.train()
-            if args.track:
-                wandb.log({"monitor_nmse": mon_nmse, "epoch": epoch})
 
         # Trigger pruning check BEFORE validation so _vol_active reflects
         # training-time constraint satisfaction, not validation batch state
